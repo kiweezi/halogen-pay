@@ -1,0 +1,7 @@
+# Excluded files and folders.
+
+# Remove vscode settings.
+/.vscode/
+# Remove sensitive files.
+/creds/*
+/config/cfg.json
