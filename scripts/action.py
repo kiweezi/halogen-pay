@@ -1,7 +1,7 @@
 # Script which completes the actions that are requested by either the bot or called directly.
 # 
 # Part of a repository:
-# - 
+# - https://github.com/kiweezi/halogen-pay
 # Created by: 
 # - https://github.com/kiweezi
 #
@@ -192,11 +192,8 @@ def update_worksheets():
 # -- Main --
 
 def main():
+    pass
     # Define the payee details.
-    payee = {
-        "name": "Zed Leadling",
-        "id": "76561198400268035"
-    }
 
     # Add a new payee.
     #add_payee(payee)

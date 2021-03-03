@@ -4,5 +4,8 @@
         "worksheet": "",
         "cred": "",
         "scope": []
+    },
+    "discord": {
+        "token": ""
     }
 }
