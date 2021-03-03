@@ -1,6 +1,6 @@
 # Excluded files and folders.
 
-# Remove vscode settings.
+# Remove vscode and github settings.
 /.vscode/
 # Remove sensitive files.
 /creds/*
