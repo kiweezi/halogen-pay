@@ -6,6 +6,11 @@
         "scope": []
     },
     "discord": {
-        "token": ""
+        "token": "",
+        "role": 
+    },
+    "steam": {
+        "url": "",
+        "key": ""
     }
 }

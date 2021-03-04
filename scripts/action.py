@@ -68,6 +68,17 @@ def get_worksheet():
     return worksheet
 
 
+def to_camel_case(text):
+    # If text is empty just return it.
+    if len(text) == 0:
+        return text
+    
+    # Split the text into words.
+    clean_text = text.replace("-", " ").replace("_", " ")
+    split_text = clean_text.split()
+    # Return the camel cased words.
+    return " ".join(char.capitalize() for char in split_text)
+
 def add_payee_row(worksheet, payee, row_index):
     # Define new row.
     new_row = [payee["name"], "!tmp", payee["status"], payee["id"]]
@@ -81,6 +92,8 @@ def add_payee(new_payee):
     # Get the worksheet from Google API.
     worksheet = get_worksheet()
 
+    # Correct name formatting.
+    new_payee["name"] = to_camel_case(new_payee["name"])
     # Define the status of the new payee.
     new_payee["status"] = "Awaiting"
 
@@ -135,6 +148,8 @@ def add_payee(new_payee):
 def remove_payee(payee):
     # Get the worksheet from Google API.
     worksheet = get_worksheet()
+    # Correct name formatting.
+    payee["name"] = to_camel_case(payee["name"])
     
     # Find the row which the payee is on.
     payee_row = worksheet.find(payee["name"]).row
@@ -186,28 +201,3 @@ def update_worksheets():
         # If the worksheet is not in the refined list, then delete it.
         if worksheet not in refined_worksheet_list:
             spreadsheet.del_worksheet(worksheet)
-
-
-
-# -- Main --
-
-def main():
-    pass
-    # Define the payee details.
-
-    # Add a new payee.
-    #add_payee(payee)
-
-    # Remove an existing payee.
-    #remove_payee(payee)
-
-    # Check and update the current worksheet.
-    #update_worksheets()
-
-    
-
-# Call the get_instruction code.
-if __name__ == "__main__":
-    main()
-
-# -- End --
