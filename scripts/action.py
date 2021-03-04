@@ -1,7 +1,7 @@
 # Script which completes the actions that are requested by either the bot or called directly.
 # 
 # Part of a repository:
-# - 
+# - https://github.com/kiweezi/halogen-pay
 # Created by: 
 # - https://github.com/kiweezi
 #
@@ -24,27 +24,60 @@ from oauth2client.service_account import ServiceAccountCredentials  # For authen
 
 # -- Global Variables --
 
+# Set configuration file path.
+cfg_path = os.path.abspath("./config/cfg.json")
 # Load the config file into the program.
-with open(os.path.abspath("./config/cfg.json")) as json_file:
+with open(cfg_path) as json_file:
     config = json.load(json_file)
 
 # -- End --
 
 
-def get_worksheet():
-    # Store the gsheets configuration.
-    gsheets_cfg = config["gsheets"]
+
+def get_google_auth(gsheets_cfg):
     # Get the credentials to access the spreadsheet.
     creds = ServiceAccountCredentials.from_json_keyfile_name(os.path.abspath(gsheets_cfg["cred"]), gsheets_cfg["scope"])
     # Authenticates with the Google API.
     client = gspread.authorize(creds)
 
-    # Set the sheet to access.
+    # Return the client.
+    return client
+
+def get_spreadsheet():
+    # Store the gsheets configuration.
+    gsheets_cfg = config["gsheets"]
+
+    # Get the Google auth client.
+    client = get_google_auth(gsheets_cfg)
+    # Set the spreadsheet to access.
+    spreadsheet = client.open(gsheets_cfg["spreadsheet"])
+
+    # Return the worksheet.
+    return spreadsheet
+
+def get_worksheet():
+    # Store the gsheets configuration.
+    gsheets_cfg = config["gsheets"]
+
+    # Get the Google auth client.
+    client = get_google_auth(gsheets_cfg)
+    # Set the worksheet to access.
     worksheet = client.open(gsheets_cfg["spreadsheet"]).worksheet(gsheets_cfg["worksheet"])
 
     # Return the worksheet.
     return worksheet
 
+
+def to_camel_case(text):
+    # If text is empty just return it.
+    if len(text) == 0:
+        return text
+    
+    # Split the text into words.
+    clean_text = text.replace("-", " ").replace("_", " ")
+    split_text = clean_text.split()
+    # Return the camel cased words.
+    return " ".join(char.capitalize() for char in split_text)
 
 def add_payee_row(worksheet, payee, row_index):
     # Define new row.
@@ -59,6 +92,8 @@ def add_payee(new_payee):
     # Get the worksheet from Google API.
     worksheet = get_worksheet()
 
+    # Correct name formatting.
+    new_payee["name"] = to_camel_case(new_payee["name"])
     # Define the status of the new payee.
     new_payee["status"] = "Awaiting"
 
@@ -107,44 +142,62 @@ def add_payee(new_payee):
         # Insert the last row before the new payee row.
         add_payee_row(worksheet, old_payee, (row_index - 1))
         # Remove the last row to make the new payee the new last row.
-        worksheet.delete_row((row_index + 1))
+        worksheet.delete_rows(row_index + 1)
 
 
-
-# -- Main --
-
-def main():
-    # Define the payee details.
-    payee = {
-        "name": "Zed Leadling",
-        "id": "76561198400268035"
-    }
-
-    # Add a new payee.
-    add_payee(payee)
-
-
-    # Delete a row.
-    #worksheet.delete_row(17)
-
-    # Duplicate the worksheet.
-    #worksheet.duplicate(new_sheet_name="test")
-
-    # Get named range data.
-    #named_range = worksheet.get("Status")
-    #named_range = worksheet.get("")
-    #worksheet.range()
-    #print(len(named_range))
-    #worksheet.update("Status", [[7,1], [17,4]])
-
-    # Find cell.
-    #cell = worksheet.find("Number of payees")
-    #print(cell.row, cell.col)
-
+def remove_payee(payee):
+    # Get the worksheet from Google API.
+    worksheet = get_worksheet()
+    # Correct name formatting.
+    payee["name"] = to_camel_case(payee["name"])
     
+    # Find the row which the payee is on.
+    payee_row = worksheet.find(payee["name"]).row
+    # Delete the row which the payee is on.
+    worksheet.delete_rows(payee_row)
 
-# Call the get_instruction code.
-if __name__ == "__main__":
-    main()
 
-# -- End --
+def update_worksheets():
+    # Import date.
+    from datetime import date
+
+    # Get the spreadsheet from Google API.
+    spreadsheet = get_spreadsheet()
+
+    # Get the current day.
+    current_day = date.today().day
+
+    # If the day of the month is after the 5th then check if the worksheet should be updated.
+    if 5 <= current_day:
+        # List the worksheets in the spreadsheet.
+        worksheet_list = spreadsheet.worksheets()
+
+        # Get next month by name.
+        current_date = date.today()
+        next_date = date(current_date.year, (current_date.month + 1), current_date.day)
+        next_month = next_date.strftime("%B")
+
+        # If the next month has no worksheet, then create one.
+        if next_month not in worksheet_list:
+            # Get the current worksheet from Google API.
+            current_worksheet = get_worksheet()
+            # Duplicate the worksheet to the next month.
+            current_worksheet.duplicate(new_sheet_name=next_month)
+
+            # Set the new worksheet in the config.
+            config["gsheets"]["worksheet"] = next_month
+            # Save the new config file.
+            json_output = json.dumps(config, indent = 4)
+            with open(cfg_path, "w") as outfile: 
+                outfile.write(json_output)
+   
+    # Delete the oldest worksheets so there are only two worksheets active.
+    # Get update list of worksheets in the spreadsheet.
+    worksheet_list = spreadsheet.worksheets()
+    # Refine the list to the worksheets needed to be kept.
+    refined_worksheet_list = [worksheet_list[0], worksheet_list[1]]
+    # Loop for each item in the old worksheet list.
+    for worksheet in worksheet_list:
+        # If the worksheet is not in the refined list, then delete it.
+        if worksheet not in refined_worksheet_list:
+            spreadsheet.del_worksheet(worksheet)

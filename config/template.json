@@ -3,7 +3,14 @@
         "spreadsheet": "",
         "worksheet": "",
         "cred": "",
-
         "scope": []
+    },
+    "discord": {
+        "token": "",
+        "role": 
+    },
+    "steam": {
+        "url": "",
+        "key": ""
     }
 }

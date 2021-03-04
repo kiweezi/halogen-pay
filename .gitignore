@@ -1,7 +1,9 @@
 # Excluded files and folders.
 
-# Remove vscode settings.
+# Remove vscode and github settings.
 /.vscode/
 # Remove sensitive files.
 /creds/*
 /config/cfg.json
+# Ignore cache files.
+/scripts/__pycache__/
