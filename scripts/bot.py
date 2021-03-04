@@ -35,6 +35,14 @@ with open(cfg_path) as json_file:
 
 
 
+def get_cred(file_path):
+    # Load the credential file into the program.
+    with open(file_path) as json_file:
+        cred_file = json.load(json_file)
+    # Return the credential.
+    return cred_file["cred"]
+
+
 async def check_role(ctx):
     # Get Discord role form config.
     role = discord.utils.get(ctx.guild.roles, id=config["discord"]["role"])
@@ -48,7 +56,6 @@ async def check_role(ctx):
     elif role in ctx.author.roles:
         print("True")
         return True
-
 
 
 async def send_message(ctx, msg_list, color):
@@ -82,7 +89,8 @@ async def get_steam_id(steam_url, purpose):
         steam_name = steam_url_list[len(steam_url_list) - 2]
         # Call the Steam api to get the user's Steam ID from their profile url.
         discord_cfg = config["steam"]
-        query = discord_cfg["url"] + "?key=" + discord_cfg["key"] + "&vanityurl=" + steam_name
+        api_key = get_cred(discord_cfg["key"])
+        query = discord_cfg["url"] + "?key=" + api_key + "&vanityurl=" + steam_name
 
         # Query the Steam API.
         async with aiohttp.ClientSession() as session:
@@ -93,7 +101,7 @@ async def get_steam_id(steam_url, purpose):
         
         # Get success result.
         success = response["success"]
-
+        # Return the success result.
         if success == 1:
             result = True
         elif success == 42:
@@ -209,7 +217,7 @@ def main():
 
 
     # Run the bot.
-    bot.run(config["discord"]["token"])
+    bot.run(get_cred(config["discord"]["token"]))
 
     
 
