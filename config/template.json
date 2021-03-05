@@ -11,6 +11,7 @@
     },
     "discord": {
         "role": 999999999999999999,
+        "emoji": "👌",
         "token": "creds/discord_token.json"
     },
     "steam": {
