@@ -5,6 +5,7 @@
 # Remove sensitive files.
 /creds/*
 !/creds/template.json
-/config/cfg.json
+/config/*
+!/config/template.json
 # Ignore cache files.
 /scripts/__pycache__/

@@ -43,6 +43,19 @@ def get_cred(file_path):
     return cred_file["cred"]
 
 
+async def add_react(ctx):
+    # Define the emoji to react with.
+    emoji = "👌"
+
+    # Get the message object for the last message sent.
+    last = ctx.channel.last_message_id
+    message = await ctx.channel.fetch_message(int(last))
+
+    # Add the emoji as a reaction.
+    await message.add_reaction(emoji)
+    print("Added reaction '" + emoji + "' to message.")
+
+
 async def check_role(ctx):
     # Get Discord role form config.
     role = discord.utils.get(ctx.guild.roles, id=config["discord"]["role"])
@@ -159,6 +172,8 @@ def main():
                     await send_error(ctx, ["Steam profile URL is not valid!"])
                 # Continue to action if args are correct data.
                 else:
+                    # Add reaction to the users message so they know the command is working.
+                    await add_react(ctx)
                     # Create dictionary for payee.
                     payee = {}
                     payee["name"] = full_name
@@ -191,6 +206,8 @@ def main():
                     await send_error(ctx, ["Payee name should not contain any numbers!"])
                 # Continue to action if args are correct data.
                 else:
+                    # Add reaction to the users message so they know the command is working.
+                    await add_react(ctx)
                     # Create dictionary for payee.
                     payee = {}
                     payee["name"] = full_name
