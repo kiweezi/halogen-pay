@@ -24,14 +24,22 @@ Automated payment for the Halogen game server.
 
 
 ## Setup
-1. Clone/Download the /script folder to your prefered location
-2. Install dependancies with pip
+1. Make sure your Discord bot has the following permissions in your server and channel:
+    - Change Nickname
+    - View Channels
+    - Send Messages
+    - Embed Links
+    - Read Message History
+    - Mention Everyone
+    - Add Reactions
+2. Clone/Download the /script folder to your prefered location
+3. Install dependancies with pip
     - `pip install -r requirements.txt` or `python -m pip install -r requirements.txt`
     - If running windows, use `win-requirements.txt` instead.
     - On some Linux/Mac systems, you may need to use `python3` and `pip3` instead of `python` and `pip`, respectively.
-3. Configure the `cfg.json` file
+4. Configure the `cfg.json` file
     - [Guide here](#configure).
-4. Add the `bot.py` script as a [systemd service](https://medium.com/codex/setup-a-python-script-as-a-service-through-systemctl-systemd-f0cc55a42267) to control it easily. The service file should look like the below, replacing the `filepaths` and `usernames`:
+5. Add the `bot.py` script as a [systemd service](https://medium.com/codex/setup-a-python-script-as-a-service-through-systemctl-systemd-f0cc55a42267) to control it easily. The service file should look like the below, replacing the `filepaths` and `usernames`:
 ```
 # Put me in /etc/systemd/system/
 
