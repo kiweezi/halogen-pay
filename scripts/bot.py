@@ -26,7 +26,7 @@ import action                                           # Action script to impli
 # -- Global Variables --
 
 # Set configuration file path.
-cfg_path = os.path.abspath("./config/cfg.json")
+cfg_path = os.path.abspath("config/cfg.json")
 # Load the config file into the program.
 with open(cfg_path) as json_file:
     config = json.load(json_file)
