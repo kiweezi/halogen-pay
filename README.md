@@ -51,6 +51,7 @@ WantedBy=multi-user.target
 
 ## Configure
 Change the behaviour of the program with the `cfg.json` file.
+First, configure the `template.json` file and then rename it to `cfg.json` when ready to use.
 
 ### gsheets
 - | spreadsheet |
