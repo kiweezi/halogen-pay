@@ -6,8 +6,8 @@
         "scope": []
     },
     "discord": {
-        "token": "",
-        "role": 
+        "role": 0,
+        "token": ""
     },
     "steam": {
         "url": "",
