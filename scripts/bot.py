@@ -17,7 +17,10 @@ import os                                               # For handling file path
 import json                                             # For handling json files.
 import discord                                          # To integrate with Discord.
 from discord.ext import commands                        # Control the Discord bot.
+import aiohttp                                          # For API requests.
+import asyncio                                          # For API requests.
 import action                                           # Action script to impliment changes.
+import runner                                           # For calling runner tasks.
 
 # -- End --
 
@@ -63,11 +66,11 @@ async def check_role(ctx):
     # If the user is not a part of the role, send error and return false.
     if role not in ctx.author.roles:
         await send_error(ctx, ["You are not part of role " + str(role.mention) + "!"])
-        print("False")
+        print("User is not part of role `" + str(role) + "`.")
         return False
     # If user is a part of the role, return true.
     elif role in ctx.author.roles:
-        print("True")
+        print("User is a part of role `" + str(role) + "`.")
         return True
 
 
@@ -93,10 +96,6 @@ async def send_default_error(ctx, cmd):
 
 async def get_steam_id(steam_url, purpose):
     try:
-        # Import aiohttp a for API requests.
-        import aiohttp
-        import asyncio
-
         # Format the users Steam url.
         steam_url_list = steam_url.split("/")
         steam_name = steam_url_list[len(steam_url_list) - 2]
@@ -156,7 +155,7 @@ def main():
         print('------')
     
     # When a user issues a join command, run add payee action.
-    @bot.command(description="Argument <full_name> must be surrounded by double quotes", help="Add a user to game server and billing")
+    @bot.command(description="Argument <full_name> must be surrounded by double quotes", help="Add a user to game server and billing", aliases=["j"])
     async def join(ctx, full_name: str=None, steam_url: str=None):
         try:
             # Continue if the role is correct.
@@ -194,7 +193,7 @@ def main():
 
 
     # When a user issues a leave command, run remove payee action.
-    @bot.command(description="Argument <full_name> must be surrounded by double quotes", help="Remove a user from game server and billing")
+    @bot.command(description="Argument <full_name> must be surrounded by double quotes", help="Remove a user from game server and billing", aliases=["l"])
     async def leave(ctx, full_name: str=None):
         try:
             # Continue if the role is correct.
@@ -231,6 +230,36 @@ def main():
         except:
             # Send an embeded error message, directing the user to the help command.
             await send_default_error(ctx, "leave")
+
+
+    # When a user issues a run command, action the task specified.
+    @bot.command(description="Argument <task> must be a valid runner task", help="Manually run a scheduled task", aliases=["r"])
+    async def run(ctx, task: str=None):
+        try:
+            # Continue if the role is correct.
+            if await check_role(ctx):
+                # Check args are correct data and display errors if not.
+                if task is None or task == "":
+                    await send_error(ctx, ["Task should not be empty!"])
+                elif any(char.isdigit() for char in task):
+                    await send_error(ctx, ["Task should not contain any numbers!"])
+                # Continue to action if args are correct data.
+                else:
+                    # Add reaction to the users message so they know the command is working.
+                    await add_react(ctx)
+
+                    # Action the task and get the result.
+                    result = runner.main(task)
+
+                    # Output the result to the Discord.
+                    if result[1] == True:
+                        await send_message(ctx, [result[0]], discord.Color.green())
+                    elif result[1] == False:
+                        await send_message(ctx, [result[0]], discord.Color.red())
+        
+        except:
+            # Send an embeded error message, directing the user to the help command.
+            await send_default_error(ctx, "run")
 
 
     # Run the bot.
