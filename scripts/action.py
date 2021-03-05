@@ -15,6 +15,7 @@
 
 import os                                               # For handling file paths and sizes.
 import json                                             # For handling json files.
+from datetime import date                               # For handling dates.
 import gspread                                          # For editting Google sheets.
 from oauth2client.service_account import ServiceAccountCredentials  # For authenticating with Google sheets.
 
@@ -77,7 +78,7 @@ def to_camel_case(text):
     clean_text = text.replace("-", " ").replace("_", " ")
     split_text = clean_text.split()
     # Return the camel cased words.
-    return " ".join(char.capitalize() for char in split_text)
+    return " ".join(word.capitalize() for word in split_text)
 
 def add_payee_row(worksheet, payee, row_index):
     # Define new row.
@@ -157,10 +158,7 @@ def remove_payee(payee):
     worksheet.delete_rows(payee_row)
 
 
-def update_worksheets():
-    # Import date.
-    from datetime import date
-
+def update_worksheet():
     # Get the spreadsheet from Google API.
     spreadsheet = get_spreadsheet()
 
@@ -171,6 +169,10 @@ def update_worksheets():
     if 5 <= current_day:
         # List the worksheets in the spreadsheet.
         worksheet_list = spreadsheet.worksheets()
+        # Get their titles.
+        worksheet_titles = []
+        for sheet in worksheet_list:
+            worksheet_titles.append(sheet.title)
 
         # Get next month by name.
         current_date = date.today()
@@ -178,7 +180,7 @@ def update_worksheets():
         next_month = next_date.strftime("%B")
 
         # If the next month has no worksheet, then create one.
-        if next_month not in worksheet_list:
+        if next_month not in worksheet_titles:
             # Get the current worksheet from Google API.
             current_worksheet = get_worksheet()
             # Duplicate the worksheet to the next month.
@@ -187,9 +189,15 @@ def update_worksheets():
             # Set the new worksheet in the config.
             config["gsheets"]["worksheet"] = next_month
             # Save the new config file.
-            json_output = json.dumps(config, indent = 4)
+            json_output = json.dumps(config, indent = 4, ensure_ascii=False)
             with open(cfg_path, "w") as outfile: 
                 outfile.write(json_output)
+
+            # Log this.
+            print ("New worksheet added :" + next_month)
+        # If the worksheet already exists, log this.
+        else:
+            print ("Worksheet `" + next_month + "` already found")
    
     # Delete the oldest worksheets so there are only two worksheets active.
     # Get update list of worksheets in the spreadsheet.
