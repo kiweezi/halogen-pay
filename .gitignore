@@ -4,6 +4,7 @@
 /.vscode/
 # Remove sensitive files.
 /creds/*
+!/creds/template.json
 /config/cfg.json
 # Ignore cache files.
 /scripts/__pycache__/
