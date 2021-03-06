@@ -25,6 +25,8 @@ from oauth2client.service_account import ServiceAccountCredentials  # For authen
 
 # -- Global Variables --
 
+# Set the working directory.
+os.chdir(os.path.abspath(os.path.join(os.getcwd(), "../")))
 # Set configuration file path.
 cfg_path = os.path.abspath("./config/cfg.json")
 # Load the config file into the program.
