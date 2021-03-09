@@ -25,7 +25,7 @@ import action                                           # Action script to impli
 # -- Global Variables --
 
 # Set the working directory.
-os.chdir(os.path.abspath(os.path.join(os.getcwd(), "../")))
+os.chdir(os.path.abspath(os.path.join(os.path.realpath(__file__), "../../")))
 # Set configuration file path.
 cfg_path = os.path.abspath("config/cfg.json")
 # Load the config file into the program.
