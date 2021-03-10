@@ -91,6 +91,8 @@ def add_payee_row(worksheet, payee, row_index):
     cell_address = worksheet.find("!tmp").address
     worksheet.update_acell(cell_address, '=G3')
 
+# -- Actions --
+
 def add_payee(new_payee):
     # Get the worksheet from Google API.
     worksheet = get_worksheet()
@@ -211,3 +213,90 @@ def update_worksheet():
         # If the worksheet is not in the refined list, then delete it.
         if worksheet not in refined_worksheet_list:
             spreadsheet.del_worksheet(worksheet)
+
+
+def get_cell_value(header_value):
+    # Get the value of the cell below the specified header in the worksheet.
+    worksheet = get_worksheet()
+    header = worksheet.find(header_value)
+    return worksheet.cell((header.row + 1), header.col).value
+
+
+def send_alert(message):
+    # For Discord webhooks.
+    from discord import Webhook, RequestsWebhookAdapter
+    # Get the webhook url.
+    with open(config["discord"]["webhook"]) as json_file:
+        discord_cred = json.load(json_file)
+    # Create webhook and send the message.
+    webhook = Webhook.from_url(discord_cred["cred"], adapter=RequestsWebhookAdapter())
+    webhook.send(embed=message)
+
+
+def pool_open():
+    # For Discord embeded messages.
+    from discord import Embed, Color
+
+    # Get PayPal config.
+    paypal_cfg = config["paypal"]
+
+    # Get cost and payment date.
+    cost = get_cell_value("Cost per payee")
+    date = get_cell_value("Payment date")
+
+    # Create the embed message to send.
+    # Initialise embed properties.
+    embed = Embed(
+        title="Pool is now OPEN",
+        description="The PayPal money pool is now open for payments. To pay, click the link above and deposit the amount specified.",
+        color=Color.green(),
+        url=paypal_cfg["pool"]
+    )
+    # Set a thumbnail.
+    embed.set_thumbnail(url=paypal_cfg["thumbnail"])
+    # Add inline fields.
+    embed.add_field(name="Payment", value=("`" + cost + "`"), inline=True)
+    embed.add_field(name="End Date", value=("`" + date + "`"), inline=True)
+    embed.add_field(name="Info", value=("<#818995365873057802>"), inline=True)
+    
+    # Send the webhook message.
+    send_alert(embed)
+
+
+def pool_close():
+    # For Discord embeded messages.
+    from discord import Embed, Color
+
+    # Get PayPal config.
+    paypal_cfg = config["paypal"]
+
+    # Get the payment date.
+    date = get_cell_value("Payment date")
+    # Get the payment status.
+    status_cell = get_cell_value("Fully paid?")
+    if status_cell == "TRUE":
+        status = "Paid ✅"
+    else:
+        status = "Unpaid ❌"
+
+    # Create the embed message to send.
+    # Initialise embed properties.
+    embed = Embed(
+        title="Pool is now CLOSED",
+        description="The PayPal money pool is now closed and will not accept payments. Use the link above to see the final results.",
+        color=Color.red(),
+        url=paypal_cfg["pool"]
+    )
+    # Set a thumbnail.
+    embed.set_thumbnail(url=paypal_cfg["thumbnail"])
+    # Add inline fields.
+    embed.add_field(name="End Date", value=("`" + date + "`"), inline=True)
+    embed.add_field(name="Status", value=("`" + status + "`"), inline=True)
+    embed.add_field(name="Info", value=("<#818995365873057802>"), inline=True)
+    
+    # Send the webhook message.
+    send_alert(embed)
+
+# -- End --
+
+pool_close()
