@@ -1,7 +1,6 @@
 {
     "gsheets": {
         "spreadsheet": "Test Spread",
-        "worksheet": "sheet1",
         "cred": "creds/gsecret.json",
         "scope": [
             "https://www.googleapis.com/auth/spreadsheets",
@@ -10,19 +9,39 @@
         ]
     },
     "discord": {
-        "role": 999999999999999999,
-        "emoji": "👌",
+        "modRole": 999999999999999999,
+        "allRole": 999999999999999999,
+        "webhook": "creds/discord_webhook.json",
         "token": "creds/discord_token.json"
     },
     "steam": {
         "url": "http://api.steampowered.com/ISteamUser/ResolveVanityURL/v0001/",
         "key": "creds/steam_key.json"
     },
+    "paypal": {
+        "pool": "",
+        "thumbnail": "https://img.icons8.com/fluent/96/000000/credit-card-cash-withdrawal.png"
+    },
     "tasks": [
         [
             "update_worksheet",
             "update",
             "u"
+        ],
+        [
+            "pool_open",
+            "open",
+            "o"
+        ],
+        [
+            "pool_remind",
+            "remind",
+            "r"
+        ],
+        [
+            "pool_close",
+            "close",
+            "c"
         ]
     ]
 }
