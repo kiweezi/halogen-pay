@@ -55,17 +55,14 @@ def get_spreadsheet():
     # Set the spreadsheet to access.
     spreadsheet = client.open(gsheets_cfg["spreadsheet"])
 
-    # Return the worksheet.
+    # Return the spreadsheet.
     return spreadsheet
 
 def get_worksheet():
-    # Store the gsheets configuration.
-    gsheets_cfg = config["gsheets"]
-
-    # Get the Google auth client.
-    client = get_google_auth(gsheets_cfg)
-    # Set the worksheet to access.
-    worksheet = client.open(gsheets_cfg["spreadsheet"]).worksheet(gsheets_cfg["worksheet"])
+    # Get the spreadsheet.
+    spreadsheet = get_spreadsheet()
+    # Set the spreadsheet to access.
+    worksheet = spreadsheet.worksheets()[0]
 
     # Return the worksheet.
     return worksheet
@@ -103,8 +100,7 @@ def add_payee(new_payee):
     new_payee["status"] = "Awaiting"
 
     # Get the number of payees.
-    payee_no_header = worksheet.find("Number of payees")
-    payee_no = int(worksheet.cell((payee_no_header.row) + 1, payee_no_header.col).value)
+    payee_no = int(get_cell_value("Number of payees"))
 
     # Get the current payee names.
     payee_header = worksheet.find("Payee")
@@ -180,7 +176,7 @@ def update_worksheet():
 
         # Get next month by name.
         current_date = date.today()
-        next_date = date(current_date.year, (current_date.month + 1), current_date.day)
+        next_date = date(current_date.year, (current_date.month + 1), 1)
         next_month = next_date.strftime("%B")
 
         # If the next month has no worksheet, then create one.
@@ -190,15 +186,17 @@ def update_worksheet():
             # Duplicate the worksheet to the next month.
             current_worksheet.duplicate(new_sheet_name=next_month)
 
-            # Set the new worksheet in the config.
-            config["gsheets"]["worksheet"] = next_month
-            # Save the new config file.
-            json_output = json.dumps(config, indent = 4, ensure_ascii=False)
-            with open(cfg_path, "w") as outfile: 
-                outfile.write(json_output)
+            # Update the payment data.
+            # Get the most up to date worksheet.
+            new_worksheet = get_worksheet()
+            # Get the position of the cell through the header.
+            header = new_worksheet.find("Payment date")
+            # Format new date and update it.
+            next_date = next_date.strftime("%d/%m/%Y")
+            new_worksheet.update_cell((header.row + 1), header.col, next_date)
 
             # Log this.
-            print ("New worksheet added :" + next_month)
+            print ("New worksheet added: " + next_month)
         # If the worksheet already exists, log this.
         else:
             print ("Worksheet `" + next_month + "` already found")
@@ -239,6 +237,8 @@ def pool_open():
 
     # Get PayPal config.
     paypal_cfg = config["paypal"]
+    # Define the role to mention.
+    role = str(config["discord"]["allRole"])
 
     # Get cost and payment date.
     cost = get_cell_value("Cost per payee")
@@ -248,20 +248,55 @@ def pool_open():
     # Initialise embed properties.
     embed = Embed(
         title="Pool is now OPEN",
-        description="The PayPal money pool is now open for payments. To pay, click the link above and deposit the amount specified.",
+        description="The PayPal money pool is now open for payments <@&" + role + ">.\nTo pay, click the link above and deposit the amount specified.",
         color=Color.green(),
         url=paypal_cfg["pool"]
     )
     # Set a thumbnail.
     embed.set_thumbnail(url=paypal_cfg["thumbnail"])
     # Add inline fields.
-    embed.add_field(name="Payment", value=("`" + cost + "`"), inline=True)
     embed.add_field(name="End Date", value=("`" + date + "`"), inline=True)
+    embed.add_field(name="Payment", value=("`" + cost + "`"), inline=True)
     embed.add_field(name="Info", value=("<#818995365873057802>"), inline=True)
     
     # Send the webhook message.
     send_alert(embed)
 
+def pool_remind():
+    # Only send a reminder if the pool has not been paid.
+    status_cell = get_cell_value("Fully paid?")
+    if status_cell == "FALSE":
+        # Get the payment status and date.
+        status = "Unpaid ❌"
+        date = get_cell_value("Payment date")
+
+        # For Discord embeded messages.
+        from discord import Embed, Color
+
+        # Get PayPal config.
+        paypal_cfg = config["paypal"]
+        # Define the role to mention.
+        role = str(config["discord"]["allRole"])
+
+        # Create the embed message to send.
+        # Initialise embed properties.
+        embed = Embed(
+            title="Payment Reminder",
+            description="The PayPal money pool will close in `1 day` <@&" + role + ">.\nTo pay, click the link above and deposit the amount specified.",
+            color=Color.gold(),
+            url=paypal_cfg["pool"]
+        )
+        # Set a thumbnail.
+        embed.set_thumbnail(url=paypal_cfg["thumbnail"])
+        # Add inline fields.
+        embed.add_field(name="End Date", value=("`" + date + "`"), inline=True)
+        embed.add_field(name="Status", value=("`" + status + "`"), inline=True)
+        embed.add_field(name="Info", value=("<#818995365873057802>"), inline=True)
+        
+        # Send the webhook message.
+        send_alert(embed)
+    else:
+        print ("Pool has already been paid.")
 
 def pool_close():
     # For Discord embeded messages.
@@ -282,8 +317,8 @@ def pool_close():
     # Create the embed message to send.
     # Initialise embed properties.
     embed = Embed(
-        title="Pool is now CLOSED",
-        description="The PayPal money pool is now closed and will not accept payments. Use the link above to see the final results.",
+        title="Pool's CLOSED",
+        description="The PayPal money pool is now closed and will not accept payments. Click the link above to see the final results.",
         color=Color.red(),
         url=paypal_cfg["pool"]
     )
@@ -298,5 +333,3 @@ def pool_close():
     send_alert(embed)
 
 # -- End --
-
-pool_close()

@@ -63,7 +63,7 @@ async def add_react(ctx):
 
 async def check_role(ctx):
     # Get Discord role form config.
-    role = discord.utils.get(ctx.guild.roles, id=config["discord"]["role"])
+    role = discord.utils.get(ctx.guild.roles, id=config["discord"]["modRole"])
 
     # If the user is not a part of the role, send error and return false.
     if role not in ctx.author.roles:
