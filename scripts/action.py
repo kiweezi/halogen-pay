@@ -68,6 +68,26 @@ def get_worksheet():
     return worksheet
 
 
+def reset_status(worksheet):
+    # Get the number of payees.
+    payee_no = int(get_cell_value("Number of payees"))
+
+    # Get the collumn and row index for the start of the range to update.
+    status_header = worksheet.find("Status")
+    status_col = ''.join([i for i in status_header.address if not i.isdigit()])
+    status_row = status_header.row + 1
+
+    # Get the range of cells to update.
+    named_range = (status_col + str(status_row) + ":" + status_col + str(status_row + (payee_no - 1)))
+    cell_list = worksheet.range(named_range)
+
+    # Update values.
+    for cell in cell_list:
+        cell.value = "Awaiting"
+
+    # Update the cells.
+    worksheet.update_cells(cell_list)
+
 def to_camel_case(text):
     # If text is empty just return it.
     if len(text) == 0:
@@ -194,6 +214,9 @@ def update_worksheet():
             # Format new date and update it.
             next_date = next_date.strftime("%d/%m/%Y")
             new_worksheet.update_cell((header.row + 1), header.col, next_date)
+
+            # Set all payee status back to 'Awaiting'.
+            reset_status(new_worksheet)
 
             # Log this.
             print ("New worksheet added: " + next_month)
