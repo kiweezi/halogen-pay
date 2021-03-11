@@ -318,7 +318,7 @@ def pool_close():
     # Initialise embed properties.
     embed = Embed(
         title="Pool's CLOSED",
-        description="The PayPal money pool is now closed and will not accept payments. Click the link above to see the final results.",
+        description="The PayPal money pool is now closed and will no longer\naccept payments. Click the link above to see the final results.",
         color=Color.red(),
         url=paypal_cfg["pool"]
     )
