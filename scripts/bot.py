@@ -117,7 +117,7 @@ def main():
     
     # When a user issues a join command, run add payee action.
     @bot.command(description="Argument <full_name> must be surrounded by double quotes", help="Add a user to game server and billing", aliases=["j"])
-    async def join(ctx, full_name: str=None, payee_id: str=None):
+    async def join(ctx, full_name: str=None):
         try:
             # Continue if the role is correct.
             if await check_role(ctx):
@@ -126,8 +126,6 @@ def main():
                     await send_error(ctx, ["Payee name should not be empty!"])
                 elif any(char.isdigit() for char in full_name):
                     await send_error(ctx, ["Payee name should not contain any numbers!"])
-                elif payee_id is None or payee_id == "":
-                    await send_error(ctx, ["Game ID should not be empty!"])
                 # Continue to action if args are correct data.
                 else:
                     # Add reaction to the users message so they know the command is working.
@@ -135,8 +133,6 @@ def main():
                     # Create dictionary for payee.
                     payee = {}
                     payee["name"] = full_name
-                    # Remove back tics from the id.
-                    payee["id"] = payee_id.replace("`","")
 
                     # Run the add payee action.
                     action.add_payee(payee)
