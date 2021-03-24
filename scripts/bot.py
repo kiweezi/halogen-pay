@@ -94,47 +94,6 @@ async def send_default_error(ctx, cmd):
     # Send an embeded error message, directing the user to the help command.
     msg_list = ["Command failed, try running `-help ", cmd, "` for help using this command."]
     await send_error(ctx, msg_list)
-
-
-async def get_steam_id(steam_url, purpose):
-    try:
-        # Format the users Steam url.
-        steam_url_list = steam_url.split("/")
-        steam_name = steam_url_list[len(steam_url_list) - 2]
-        # Call the Steam api to get the user's Steam ID from their profile url.
-        discord_cfg = config["steam"]
-        api_key = get_cred(discord_cfg["key"])
-        query = discord_cfg["url"] + "?key=" + api_key + "&vanityurl=" + steam_name
-
-        # Query the Steam API.
-        async with aiohttp.ClientSession() as session:
-            async with session.get(query) as answer:
-                print("GET request returned status: " + str(answer.status))
-                response = await answer.json()
-                response = response["response"]
-        
-        # Get success result.
-        success = response["success"]
-        # Return the success result.
-        if success == 1:
-            result = True
-        elif success == 42:
-            result = False
-        # Log status of test.
-        print("SteamID test returned: " + str(result))
-        
-        # If the purpose is to test, return result.
-        if purpose == "test":
-            return result
-        # If the purpose is to get, then return the SteamID.
-        elif purpose == "get" and result == True:
-            steam_id = response["steamid"]
-            print ("Found SteamID: " + steam_id)
-            return steam_id
-
-    # If the URL is not useable then return false.
-    except:
-        return False
         
 
 
@@ -158,7 +117,7 @@ def main():
     
     # When a user issues a join command, run add payee action.
     @bot.command(description="Argument <full_name> must be surrounded by double quotes", help="Add a user to game server and billing", aliases=["j"])
-    async def join(ctx, full_name: str=None, steam_url: str=None):
+    async def join(ctx, full_name: str=None):
         try:
             # Continue if the role is correct.
             if await check_role(ctx):
@@ -167,10 +126,6 @@ def main():
                     await send_error(ctx, ["Payee name should not be empty!"])
                 elif any(char.isdigit() for char in full_name):
                     await send_error(ctx, ["Payee name should not contain any numbers!"])
-                elif steam_url is None or steam_url == "":
-                    await send_error(ctx, ["Steam profile URL should not be empty!"])
-                elif await get_steam_id(steam_url, "test") == False:
-                    await send_error(ctx, ["Steam profile URL is not valid!"])
                 # Continue to action if args are correct data.
                 else:
                     # Add reaction to the users message so they know the command is working.
@@ -178,8 +133,6 @@ def main():
                     # Create dictionary for payee.
                     payee = {}
                     payee["name"] = full_name
-                    steam_id = await get_steam_id(steam_url, "get")
-                    payee["id"] = steam_id
 
                     # Run the add payee action.
                     action.add_payee(payee)
@@ -232,6 +185,55 @@ def main():
         except:
             # Send an embeded error message, directing the user to the help command.
             await send_default_error(ctx, "leave")
+        
+    
+    # A command to update the whitelist.
+    @bot.command(description="Argument <full_name> must be surrounded by double quotes", help="Updates the whitelist for the specified game and user", aliases=["w"])
+    async def whitelist(ctx, instruction: str=None, game: str=None, full_name: str=None, payee_id: str=None):
+        try:
+            # Continue if the role is correct.
+            if await check_role(ctx):
+                # Reformat some variable strings.
+                instruction = instruction.lower()
+                game = game.lower()
+
+                # Check args are correct data and display errors if not.
+                if instruction not in ["add", "remove", "update"]:
+                    await send_error(ctx, ["Instruction is not correct!"])
+                elif game not in [member["name"].lower() for member in config["games"]]:
+                    await send_error(ctx, ["Game entered does not exist!"])
+                elif full_name is None or full_name == "":
+                    await send_error(ctx, ["Payee name should not be empty!"])
+                elif any(char.isdigit() for char in full_name):
+                    await send_error(ctx, ["Payee name should not contain any numbers!"])
+                elif payee_id is None:
+                    await send_error(ctx, ["Username / ID should not be empty!"])
+                # Continue to action if args are correct data.
+                else:
+                    # Add reaction to the users message so they know the command is working.
+                    await add_react(ctx)
+                    # Create dictionary for payee.
+                    payee = {"name": full_name, "new_id": payee_id}
+
+                    try:
+                        # Run the action.
+                        action.update_whitelist(instruction, game, payee)
+                        print ("Payee ID updated for " + payee["name"] + ". " + game.capitalize() + ": " + payee["new_id"])
+
+                        # Output the result to the Discord.
+                        msg_list = ["Username / ID updated for `" + payee["name"] + "`"]
+                        await send_message(ctx, msg_list, discord.Color.green())
+
+                    # If the remove payee action failed, display an error.
+                    except:
+                        print ("Could not update whitelist for " + payee["name"])
+
+                        # Output the result to the Discord.
+                        await send_error(ctx, ["Could not update whitelist for `" + payee["name"] + "`"])
+            
+        except:
+            # Send an embeded error message, directing the user to the help command.
+            await send_default_error(ctx, "whitelist")
 
 
     # When a user issues a run command, action the task specified.

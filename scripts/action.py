@@ -101,12 +101,13 @@ def to_camel_case(text):
 
 def add_payee_row(worksheet, payee, row_index):
     # Define new row.
-    new_row = [payee["name"], "!tmp", payee["status"], payee["id"]]
+    new_row = [payee["name"], "!tmp", payee["status"]]
 
     # Insert new row and update the formula.
     worksheet.insert_row(new_row, row_index)
     cell_address = worksheet.find("!tmp").address
     worksheet.update_acell(cell_address, '=G3')
+
 
 # -- Actions --
 
@@ -176,6 +177,32 @@ def remove_payee(payee):
     payee_row = worksheet.find(payee["name"]).row
     # Delete the row which the payee is on.
     worksheet.delete_rows(payee_row)
+
+
+def update_whitelist(instruction, game, payee):
+    # Import the whitelist script.
+    import whitelist
+    # Correct name formatting.
+    payee["name"] = to_camel_case(payee["name"])
+
+    # If the instruction is to remove then set the new_id to blank.
+    if instruction == "remove":
+        payee["new_id"] = ""
+        print ("payee ID: " + payee["new_id"])
+
+    # Update the payee ID in the spreadsheet.
+    # Get the current worksheet.
+    worksheet = get_worksheet()
+    # Find the cell to update.
+    cell_collumn = worksheet.find(game.capitalize() + " ID").col
+    cell_row = worksheet.find(payee["name"]).row
+    # Get the current ID for the payee.
+    payee["old_id"] = worksheet.cell(cell_row, cell_collumn).value
+    # Update the cell with the payee ID.
+    worksheet.update_cell(cell_row, cell_collumn, payee["new_id"])
+
+    # Call the task through the whitelist file.
+    getattr(whitelist, game)(instruction, payee)
 
 
 def update_worksheet():

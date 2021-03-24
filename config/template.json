@@ -1,4 +1,11 @@
 {
+    "games": [
+        {
+            "name": "",
+            "path": "",
+            "whitelist": false   
+        }
+    ],
     "gsheets": {
         "spreadsheet": "Test Spread",
         "cred": "creds/gsecret.json",
@@ -13,10 +20,6 @@
         "allRole": 999999999999999999,
         "webhook": "creds/discord_webhook.json",
         "token": "creds/discord_token.json"
-    },
-    "steam": {
-        "url": "http://api.steampowered.com/ISteamUser/ResolveVanityURL/v0001/",
-        "key": "creds/steam_key.json"
     },
     "paypal": {
         "pool": "",
