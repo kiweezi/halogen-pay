@@ -185,6 +185,55 @@ def main():
         except:
             # Send an embeded error message, directing the user to the help command.
             await send_default_error(ctx, "leave")
+        
+    
+    # A command to update the whitelist.
+    @bot.command(description="Argument <full_name> must be surrounded by double quotes", help="Updates the whitelist for the specified game and user", aliases=["w"])
+    async def whitelist(ctx, instruction: str=None, game: str=None, full_name: str=None, payee_id: str=None):
+        try:
+            # Continue if the role is correct.
+            if await check_role(ctx):
+                # Reformat some variable strings.
+                instruction = instruction.lower()
+                game = game.lower()
+
+                # Check args are correct data and display errors if not.
+                if instruction not in ["add", "remove", "update"]:
+                    await send_error(ctx, ["Instruction is not correct!"])
+                elif game not in [member["name"].lower() for member in config["games"]]:
+                    await send_error(ctx, ["Game entered does not exist!"])
+                elif full_name is None or full_name == "":
+                    await send_error(ctx, ["Payee name should not be empty!"])
+                elif any(char.isdigit() for char in full_name):
+                    await send_error(ctx, ["Payee name should not contain any numbers!"])
+                elif payee_id is None:
+                    await send_error(ctx, ["Username / ID should not be empty!"])
+                # Continue to action if args are correct data.
+                else:
+                    # Add reaction to the users message so they know the command is working.
+                    await add_react(ctx)
+                    # Create dictionary for payee.
+                    payee = {"name": full_name, "new_id": payee_id}
+
+                    try:
+                        # Run the action.
+                        action.update_whitelist(instruction, game, payee)
+                        print ("Payee ID updated for " + payee["name"] + ". " + game.capitalize() + ": " + payee["new_id"])
+
+                        # Output the result to the Discord.
+                        msg_list = ["Username / ID updated for `" + payee["name"] + "`"]
+                        await send_message(ctx, msg_list, discord.Color.green())
+
+                    # If the remove payee action failed, display an error.
+                    except:
+                        print ("Could not update whitelist for " + payee["name"])
+
+                        # Output the result to the Discord.
+                        await send_error(ctx, ["Could not update whitelist for `" + payee["name"] + "`"])
+            
+        except:
+            # Send an embeded error message, directing the user to the help command.
+            await send_default_error(ctx, "whitelist")
 
 
     # When a user issues a run command, action the task specified.

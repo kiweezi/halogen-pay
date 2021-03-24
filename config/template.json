@@ -1,4 +1,11 @@
 {
+    "games": [
+        {
+            "name": "",
+            "path": "",
+            "whitelist": false   
+        }
+    ],
     "gsheets": {
         "spreadsheet": "Test Spread",
         "cred": "creds/gsecret.json",
