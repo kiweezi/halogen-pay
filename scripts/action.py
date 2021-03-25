@@ -280,34 +280,51 @@ def send_alert(message):
     webhook = Webhook.from_url(discord_cred["cred"], adapter=RequestsWebhookAdapter())
     webhook.send(embed=message)
 
+def get_pool_details():
+    # Get PayPal and Discord config.
+    paypal_cfg = config["paypal"]
+    discord_cfg = config["discord"]
+    # Define empty dictionary to return details.
+    details = {}
+
+    # Define the role to mention.
+    if discord_cfg["everyone"] == True:
+        details["role"] = "@everyone"
+    else:
+        details["role"] = "<@&" + str(discord_cfg["allRole"]) + ">"
+
+    # Get cost, payment date, urls and info.
+    details["cost"] = get_cell_value("Cost per payee")
+    details["date"] = get_cell_value("Payment date")
+    details["pool_url"] = paypal_cfg["pool"]
+    details["thumb_url"] = paypal_cfg["thumbnail"]
+    details["info"] = str(discord_cfg["channel"])
+
+    # Return the details.
+    return details
+
 
 def pool_open():
     # For Discord embeded messages.
     from discord import Embed, Color
 
-    # Get PayPal config.
-    paypal_cfg = config["paypal"]
-    # Define the role to mention.
-    role = str(config["discord"]["allRole"])
-
-    # Get cost and payment date.
-    cost = get_cell_value("Cost per payee")
-    date = get_cell_value("Payment date")
+    # Get pool details.
+    details = get_pool_details()
 
     # Create the embed message to send.
     # Initialise embed properties.
     embed = Embed(
         title="Pool is now OPEN",
-        description="The PayPal money pool is now open for payments <@&" + role + ">.\nTo pay, click the link above and deposit the amount specified.",
+        description="The PayPal money pool is now open for payments " + details["role"] + ".\nTo pay, click the link above and deposit the amount specified.",
         color=Color.green(),
-        url=paypal_cfg["pool"]
+        url=details["pool_url"]
     )
     # Set a thumbnail.
-    embed.set_thumbnail(url=paypal_cfg["thumbnail"])
+    embed.set_thumbnail(url=details["thumb_url"])
     # Add inline fields.
-    embed.add_field(name="End Date", value=("`" + date + "`"), inline=True)
-    embed.add_field(name="Payment", value=("`" + cost + "`"), inline=True)
-    embed.add_field(name="Info", value=("<#818995365873057802>"), inline=True)
+    embed.add_field(name="End Date", value=("`" + details["date"] + "`"), inline=True)
+    embed.add_field(name="Payment", value=("`" + details["cost"] + "`"), inline=True)
+    embed.add_field(name="Info", value=("<#" + details["info"] + ">"), inline=True)
     
     # Send the webhook message.
     send_alert(embed)
@@ -318,30 +335,27 @@ def pool_remind():
     if status_cell == "FALSE":
         # Get the payment status and date.
         status = "Unpaid ❌"
-        date = get_cell_value("Payment date")
 
         # For Discord embeded messages.
         from discord import Embed, Color
 
-        # Get PayPal config.
-        paypal_cfg = config["paypal"]
-        # Define the role to mention.
-        role = str(config["discord"]["allRole"])
+        # Get pool details.
+        details = get_pool_details()
 
         # Create the embed message to send.
         # Initialise embed properties.
         embed = Embed(
             title="Payment Reminder",
-            description="The PayPal money pool will close in `1 day` <@&" + role + ">.\nTo pay, click the link above and deposit the amount specified.",
+            description="The PayPal money pool will close in `1 day` " + details["role"] + ".\nTo pay, click the link above and deposit the amount specified.",
             color=Color.gold(),
-            url=paypal_cfg["pool"]
+            url=details["pool_url"]
         )
         # Set a thumbnail.
-        embed.set_thumbnail(url=paypal_cfg["thumbnail"])
+        embed.set_thumbnail(url=details["thumb_url"])
         # Add inline fields.
-        embed.add_field(name="End Date", value=("`" + date + "`"), inline=True)
+        embed.add_field(name="End Date", value=("`" + details["date"] + "`"), inline=True)
         embed.add_field(name="Status", value=("`" + status + "`"), inline=True)
-        embed.add_field(name="Info", value=("<#818995365873057802>"), inline=True)
+        embed.add_field(name="Info", value=("<#" + details["info"] + ">"), inline=True)
         
         # Send the webhook message.
         send_alert(embed)
@@ -352,11 +366,9 @@ def pool_close():
     # For Discord embeded messages.
     from discord import Embed, Color
 
-    # Get PayPal config.
-    paypal_cfg = config["paypal"]
+    # Get pool details.
+    details = get_pool_details()
 
-    # Get the payment date.
-    date = get_cell_value("Payment date")
     # Get the payment status.
     status_cell = get_cell_value("Fully paid?")
     if status_cell == "TRUE":
@@ -370,14 +382,14 @@ def pool_close():
         title="Pool's CLOSED",
         description="The PayPal money pool is now closed and will no longer\naccept payments. Click the link above to see the final results.",
         color=Color.red(),
-        url=paypal_cfg["pool"]
+        url=details["pool_url"]
     )
     # Set a thumbnail.
-    embed.set_thumbnail(url=paypal_cfg["thumbnail"])
+    embed.set_thumbnail(url=details["thumb_url"])
     # Add inline fields.
-    embed.add_field(name="End Date", value=("`" + date + "`"), inline=True)
+    embed.add_field(name="End Date", value=("`" + details["date"] + "`"), inline=True)
     embed.add_field(name="Status", value=("`" + status + "`"), inline=True)
-    embed.add_field(name="Info", value=("<#818995365873057802>"), inline=True)
+    embed.add_field(name="Info", value=("<#" + details["info"] + ">"), inline=True)
     
     # Send the webhook message.
     send_alert(embed)
