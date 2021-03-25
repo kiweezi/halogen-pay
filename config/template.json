@@ -16,8 +16,10 @@
         ]
     },
     "discord": {
+        "channel": 999999999999999999,
         "modRole": 999999999999999999,
         "allRole": 999999999999999999,
+        "everyone": true,
         "webhook": "creds/discord_webhook.json",
         "token": "creds/discord_token.json"
     },
